@@ -1,0 +1,39 @@
+---
+- name: Install and configure Telegraf
+  hosts: all
+  become: true
+  tasks:
+    - name: Download InfluxData GPG key
+      get_url:
+        url: https://repos.influxdata.com/influxdata-archive.key
+        dest: /tmp/influxdata-archive.key
+        mode: '0644'
+
+    - name: Verify GPG key checksum
+      shell: echo "943666881a1b8d9b849b74caebf02d3465d6beb716510d86a39f6c8e8dac7515  /tmp/influxdata-archive.key" | sha256sum -c -
+      register: checksum_result
+      failed_when: checksum_result.rc != 0
+      changed_when: false
+
+    - name: Convert GPG key to binary format
+      shell: cat /tmp/influxdata-archive.key | gpg --dearmor > /etc/apt/trusted.gpg.d/influxdata-archive.gpg
+      args:
+        creates: /etc/apt/trusted.gpg.d/influxdata-archive.gpg
+
+    - name: Add InfluxData repository
+      apt_repository:
+        repo: deb [signed-by=/etc/apt/trusted.gpg.d/influxdata-archive.gpg] https://repos.influxdata.com/debian stable main
+        state: present
+        filename: influxdata
+        update_cache: false
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Install Telegraf
+      apt:
+        name: telegraf
+        state: present
+

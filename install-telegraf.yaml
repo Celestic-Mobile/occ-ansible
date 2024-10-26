@@ -2,6 +2,9 @@
 - name: Install and configure Telegraf
   hosts: all
   become: true
+  vars_files:
+    - vars/config.yaml
+
   tasks:
     - name: Download InfluxData GPG key
       get_url:
@@ -37,3 +40,27 @@
         name: telegraf
         state: present
 
+    - name: Configure Telegraf token in environment file
+      lineinfile:
+        path: /etc/default/telegraf
+        create: yes
+        line: 'INFLUX_TOKEN={{ influx_token }}'
+        regexp: '^INFLUX_TOKEN='
+        mode: '0600'
+      notify: restart telegraf
+
+    - name: Deploy Telegraf configuration
+      template:
+        src: templates/telegraf.conf.j2
+        dest: /etc/telegraf/telegraf.conf
+        owner: telegraf
+        group: telegraf
+        mode: '0644'
+        validate: '/usr/bin/telegraf -config %s -test'  # Validates config before deploying
+      notify: restart telegraf
+
+  handlers:
+    - name: restart telegraf
+      service:
+        name: telegraf
+        state: restarted

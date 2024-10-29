@@ -1,0 +1,14 @@
+---
+# InfluxDB connection details
+influx_urls: ["https://inf.programmerq.net:443"]
+influx_org: "influxdata"
+influx_bucket: "default"
+influx_token: "vkP9chJI5jExiY2TCK1G9tkhM2hWBEXc_4NU0CxZ6RBwhe5_rvchcyNhOu_DwAPSQaOTa__xR5ydvu7jG6PVPg=="
+
+# Telegraf settings
+telegraf_interval: "60s"
+
+# Teleport Configuration
+teleport_proxy_server: "connectcarolina.teleport.sh:443"
+teleport_token: "b9f2d1e3610e790cc38dde1a641b6d57"
+teleport_ca_pin: "sha256:ce7fce829f9eccc5313ea96c9d36eb8238491aeb9d9ae32d28813b90aa46dfe5"

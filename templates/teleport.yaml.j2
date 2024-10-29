@@ -1,0 +1,53 @@
+version: v3
+teleport:
+  nodename: {{ inventory_hostname | regex_replace('\..*', '') }}
+  data_dir: /var/lib/teleport
+  join_params:
+    token_name: {{ teleport_token }}
+    method: token
+  proxy_server: {{ teleport_proxy_server }}
+  log:
+    output: stderr
+    severity: INFO
+    format:
+      output: text
+  ca_pin: "{{teleport_ca_pin}}"
+  diag_addr: ""
+auth_service:
+  enabled: "no"
+ssh_service:
+  enabled: "yes"
+  labels:
+    project: occ
+{% if use_open5gs|default(False) %}
+    5gcore: open5gs
+{% endif %}
+{% if use_cumucore|default(False) %}
+    5gcore: cumucore
+{% endif %}
+app_service:
+  enabled: "yes"
+  debug_app: false
+  apps:
+{% if use_open5gs|default(False) %}
+  - name: "{{ inventory_hostname | regex_replace('\..*', '') }}-open5gs"
+    description: "Open5gs Admin"
+    uri: "http://127.0.0.1:9999"
+    rewrite:
+      redirect:
+      - "127.0.0.1"
+      headers:
+      - "Host: {{ inventory_hostname | regex_replace('\..*', '') }}-open5gs.connectcarolina.teleport.sh"
+{% endif %}
+{% if use_cumucore|default(False) %}
+  - name: {{ inventory_hostname | regex_replace('\..*', '') }}-cumucore
+    uri: https://localhost:9000/
+    insecure_skip_verify: true
+{% endif %}
+  - name: {{ inventory_hostname | regex_replace('\..*', '') }}-gnb
+    insecure_skip_verify: true
+    uri: "https://{{ gnb_ip|default("10.128.1.5") }}:443"
+  - name: {{ inventory_hostname | regex_replace('\..*', '') }}-gnb-tcp
+    uri: "tcp://{{ gnb_ip|default("10.128.1.5") }}:443"
+proxy_service:
+  enabled: "no"

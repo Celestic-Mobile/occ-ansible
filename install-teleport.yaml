@@ -1,0 +1,68 @@
+---
+- name: Install and Configure Teleport
+  hosts: all
+  become: true
+  vars_files:
+    - vars/config.yaml
+  tasks:
+    - name: Check if system is Debian/Ubuntu
+      fail: 
+        msg: "This playbook only supports Debian and Ubuntu"
+      when: ansible_facts['os_family'] not in ['Debian', 'Ubuntu']
+
+    - name: Get Teleport version from API
+      uri:
+        url: "https://{{ teleport_proxy_server }}/v1/webapi/automaticupgrades/channel/stable/cloud/version"
+        return_content: yes
+      register: teleport_version_response
+      changed_when: false
+
+    - name: Set version fact
+      set_fact:
+        #teleport_version: "{{ teleport_version_response.content | regex_replace('v', '') }}"
+        teleport_version: "16.4.2"
+
+    - name: Download Teleport GPG key
+      get_url:
+        url: https://apt.releases.teleport.dev/gpg
+        dest: /usr/share/keyrings/teleport-archive-keyring.asc
+        mode: '0644'
+
+    - name: Add Teleport repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/teleport-archive-keyring.asc] https://apt.releases.teleport.dev/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable/cloud"
+        state: present
+        filename: teleport
+        update_cache: false
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      changed_when: false
+
+    - name: Install Teleport packages
+      apt:
+        name: 
+          - "teleport-ent={{ teleport_version }}"
+          - teleport-ent-updater
+        state: present
+
+    - name: Deploy Teleport configuration
+      template:
+        src: templates/teleport.yaml.j2
+        dest: /etc/teleport.yaml
+        mode: '0600'
+        validate: 'teleport configure --test %s'
+      notify: restart teleport
+
+    - name: Enable and start Teleport service
+      systemd:
+        name: teleport
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: reload teleport
+      systemd:
+        name: teleport
+        state: reloaded

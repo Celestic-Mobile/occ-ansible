@@ -1,0 +1,20 @@
+all:
+  hosts:
+    occ-12.connectcarolina.teleport.sh:
+    occ-13.connectcarolina.teleport.sh:
+    occ-15.connectcarolina.teleport.sh:
+    occ-16.connectcarolina.teleport.sh:
+cumucore:
+  hosts:
+    occ-13.connectcarolina.teleport.sh:
+    occ-15.connectcarolina.teleport.sh:
+    occ-16.connectcarolina.teleport.sh:
+  vars:
+    use_cumucore: True
+    gnb_ip: 10.128.1.5
+open5gs:
+  hosts:
+    occ-12.connectcarolina.teleport.sh:
+  vars:
+    use_open5gs: True
+    gnb_ip: 10.254.71.115

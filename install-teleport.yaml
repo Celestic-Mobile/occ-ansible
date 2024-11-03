@@ -40,12 +40,19 @@
         update_cache: yes
       changed_when: false
 
+    - name: Check if teleport-ent package is held # teleport-ent-updater will mark the correct version as held
+      shell: "dpkg --get-selections | grep '^teleport-ent[[:space:]]*hold$'"
+      register: teleport_held
+      changed_when: false
+      failed_when: false
+
     - name: Install Teleport packages
       apt:
         name: 
           - "teleport-ent={{ teleport_version }}"
           - teleport-ent-updater
         state: present
+      when: teleport_held.rc != 0  # Only proceed if the package is not held
 
     - name: Deploy Teleport configuration
       template:
@@ -53,7 +60,7 @@
         dest: /etc/teleport.yaml
         mode: '0600'
         validate: 'teleport configure --test %s'
-      notify: restart teleport
+      notify: reload teleport
 
     - name: Enable and start Teleport service
       systemd:

@@ -49,5 +49,8 @@ app_service:
     uri: "https://{{ gnb_ip|default("10.128.1.5") }}:443"
   - name: {{ inventory_hostname | regex_replace('\..*', '') }}-gnb-tcp
     uri: "tcp://{{ gnb_ip|default("10.128.1.5") }}:443"
+  - name: {{ inventory_hostname | regex_replace('\..*', '') }}-gnb-ssh
+    uri: "tcp://{{ gnb_ip|default("10.128.1.5") }}:22"
+    public_addr: {{ inventory_hostname | regex_replace('\..*', '') }}-gnb-tcp.connectcarolina.teleport.sh
 proxy_service:
   enabled: "no"

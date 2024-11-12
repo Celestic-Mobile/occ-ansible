@@ -17,4 +17,4 @@ open5gs:
     occ-12.connectcarolina.teleport.sh:
   vars:
     use_open5gs: True
-    gnb_ip: 10.254.71.115
+    gnb_ip: 192.168.168.124 # current dhcp ip
